@@ -20,11 +20,14 @@ import {
 import { WebsocketProvider } from "y-websocket";
 import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
-import * as Y from "yjs";;
+import * as Y from "yjs";
+import { Editor } from "slate";
 
 const App =() => {
 
     const [value, setValue] = usePlateStates().value();
+
+
     const [sharedType, provider] = useMemo(() => {
     const doc = new Y.Doc();
     const  sharedType = doc.getArray<SyncElement>("content");
@@ -37,9 +40,9 @@ const App =() => {
   
   
   
-  const editor:any = useMemo(() => {
+  const editor = useMemo(() => {
     const editor:any = withCursor(
-      withYjs(withReact(withHistory(createPlateEditor())), sharedType),
+      withYjs(withReact(withHistory(createPlateEditor({plugins:basicNodesPlugins}))), sharedType),
       provider.awareness
     );
   
@@ -66,15 +69,16 @@ const App =() => {
           { children: [{ text: "Hello world!" }] },
         ]);
       }
-    });
+    }
+    );
 
-    provider.on("sync", (isSynced: boolean) => {
-      if (isSynced && sharedType.length === 0) {
-        toSharedType(sharedType, [
-          { children: [{ text: balloonToolbarValue }] },
-        ]);
-      }
-    });
+    // provider.on("sync", (isSynced: boolean) => {
+    //   if (isSynced && sharedType.length === 0) {
+    //     toSharedType(sharedType, [
+    //       { children: [{ text: "Hello world!","italic":true }] },
+    //     ]);
+    //   }
+    // });
   
     provider.connect();
   
@@ -95,12 +99,15 @@ const App =() => {
   return(
     <>
      <Plate<MyValue>
-    //editor={editor}
-    editableProps={editableProps}
-    plugins={basicNodesPlugins}
-    //initialValue={balloonToolbarValue}
+        //onChange={setValue}
+        editor={editor}
+        editableProps={editableProps}
+        plugins={basicNodesPlugins}
+        initialValue={balloonToolbarValue}
   >
     <MarkBalloonToolbar />
+    value: {JSON.stringify(sharedType)}
+    value: {JSON.stringify(value)}
   </Plate>
 
   <div >

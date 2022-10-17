@@ -2,7 +2,7 @@
 /** @jsx jsx */
 import { jsx } from '@udecode/plate-test-utils';
 
-jsx;
+//jsx;
 
 export const balloonToolbarValue: any = (
   <fragment>
