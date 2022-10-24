@@ -1,10 +1,10 @@
 import React, { useMemo, useRef,useEffect} from "react";
 //import { Plate } from '@udecode/plate';
-import { balloonToolbarValue } from './balloonToolbarValue';
-import { MarkBalloonToolbar } from './MarkBalloonToolbar';
-import { basicNodesPlugins } from './basicNodesPlugins';
-import { editableProps } from './editableProps';
-import { MyValue } from './plateTypes'
+import { balloonToolbarValue } from './config/balloonToolbarValue';
+import { MarkBalloonToolbar } from './config/MarkBalloonToolbar';
+import { basicNodesPlugins } from './config/basicNodesPlugins';
+import { editableProps } from './config/editableProps';
+import { MyValue } from './config/plateTypes'
 import {
   createPlateEditor,
   usePlateStates,
@@ -22,32 +22,52 @@ import { withReact } from "slate-react";
 import { withHistory } from "slate-history";
 import * as Y from "yjs";
 import { Editor } from "slate";
+import { IndexeddbPersistence } from "y-indexeddb";
 
 const App =() => {
 
     const [value, setValue] = usePlateStates().value();
+    // const doc = new Y.Doc();
+    // const persistence = new IndexeddbPersistence("slate-yjs-demo", doc);
+    // const  sharedType = doc.getArray<SyncElement>("content");
+    // const provider = new WebsocketProvider("ws://127.0.0.1:1234", "slate-yjs-demo", doc, {
+    //   connect: false,
+    // });
 
 
-    const [sharedType, provider] = useMemo(() => {
+    const [sharedType, provider,persistence] = useMemo(() => {
     const doc = new Y.Doc();
+    const persistence = new IndexeddbPersistence("slate-yjs-demo", doc);
     const  sharedType = doc.getArray<SyncElement>("content");
     const provider = new WebsocketProvider("ws://127.0.0.1:1234", "slate-yjs-demo", doc, {
       connect: false,
     });
   
-    return [sharedType, provider];
+    return [sharedType, provider,persistence];
   }, []);
   
-  
+  const awareness = provider.awareness;
   
   const editor = useMemo(() => {
     const editor:any = withCursor(
       withYjs(withReact(withHistory(createPlateEditor({plugins:basicNodesPlugins}))), sharedType),
-      provider.awareness
+      awareness
     );
   
     return editor;
-  }, [sharedType, provider]);
+  }, [sharedType, provider,persistence]);
+  awareness.setLocalStateField("user", {
+    // Define a print name that should be displayed
+    name: "Harper  Charpentier 3000",
+    // Define a color that should be associated to the user:
+    color: "#ffb61e" // should be a hex color
+  });
+
+  awareness.on("change", () => {
+    // Whenever somebody updates their awareness information,
+    // we log all awareness information from all users.
+    console.log(Array.from(awareness.getStates().values()));
+  });
   
   useEffect(() => {
     // provider.on("status", ({ status }) => {
@@ -104,6 +124,7 @@ const App =() => {
         editableProps={editableProps}
         plugins={basicNodesPlugins}
         initialValue={balloonToolbarValue}
+
   >
     <MarkBalloonToolbar />
     value: {JSON.stringify(sharedType)}
